@@ -21,21 +21,30 @@ client.login(config.discord.token);
 client.on('ready', () => {
     scrapeComms(client);
     setInterval(function(){scrapeComms(client);}, 60000);
-    var channel = client.channels.find(x => x.name == config.discord.channel)
-    channel.send("GNS is Online! \n(see !about for more)")
+    discordNotify("GNS is Online! \n(see !about for more)")
+    telegramNotify("Test")
 });
 
 client.on('message', message => {
     if(message.content === '!about'){
-        message.channel.send('***Galactic News Service*** - **Automated Comms Notification** \n**Developer:** Demannu **Version:** 0.5a')
+        message.channel.send('***Galactic News Service*** - **Automated Comms Notification** \n**Developer:** Demannu **Version:** ' + config.version)
     }
 });
 
 function telegramNotify(message){
-    request.post({
-        url: "https://api.telegram.org/bot" + config.telegram.token + "/sendMessage", 
-        form: {"parse_mode": "HTML", "text": message, "chat_id": config.telegram.channel}
-    })
+    for(var chan in config.telegram.channel){
+        request.post({
+            url: "https://api.telegram.org/bot" + config.telegram.token + "/sendMessage", 
+            form: {"parse_mode": "HTML", "text": message, "chat_id": config.telegram.channel[chan]}
+        })
+    }
+}
+
+function discordNotify(message){
+    for(var chan in config.discord.channel){
+        var channel = client.channels.find(x => x.name == config.discord.channel[chan])
+        channel.send(message);
+    }
 }
 
 function scrapeComms(client){
@@ -59,14 +68,13 @@ function scrapeComms(client){
                     })
                     commsPost.forEach(function(elm){
                         Comms.findOrCreate({channel: elm.channel, title: elm.title, author: elm.author}, function(err, comm, created){
-                            var channel = client.channels.find(x => x.name == config.discord.channel)
                             if(err){
                                 console.log("ERROR: " + err)
                             }
                             if(created){
                                 if(comm.title !== undefined){
                                     telegramNotify("<b>New Comms</b> - " + comm.channel + " \n <b>" + comm.title + "</b> \n [" + comm.author + "]" )
-                                    channel.send("***New Comms*** - **" + comm.channel + "** \n **Title:** " + comm.title + " \n **Author:** " + comm.author)
+                                    discordNotify("@here ***New Comms*** - **" + comm.channel + "** \n **Title:** " + comm.title + " \n **Author:** " + comm.author)
                                 }
                                 comm.replies = Number(elm.replies);
                                 comm.save((err)=>{
@@ -78,7 +86,7 @@ function scrapeComms(client){
                             } else {
                                 if(comm.replies && Number(comm.replies) < Number(elm.replies)){
                                     telegramNotify("<b>New Reply</b> - " + comm.channel + " \n <b>" + comm.title + "</b> [" + elm.replies + "] \n " + elm.last)
-                                    channel.send("***New Reply*** - **" + comm.channel + "** \n **Title:** " + comm.title + " **[" + elm.replies + "]** \n " + elm.last)
+                                    discordNotify("@here ***New Reply*** - **" + comm.channel + "** \n **Title:** " + comm.title + " **[" + elm.replies + "]** \n " + elm.last)
                                     comm.replies = Number(elm.replies)
                                     comm.last = elm.last
                                     comm.save((err)=>{

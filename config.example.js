@@ -1,4 +1,5 @@
 module.exports = {
+    "version": "0.5b",
     "botg":{
         "user": "username",
         "pass": "password"
