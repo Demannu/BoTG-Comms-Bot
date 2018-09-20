@@ -22,7 +22,6 @@ client.on('ready', () => {
     scrapeComms(client);
     setInterval(function(){scrapeComms(client);}, 60000);
     discordNotify("GNS is Online! \n(see !about for more)")
-    telegramNotify("Test")
 });
 
 client.on('message', message => {
