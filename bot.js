@@ -66,17 +66,17 @@ function scrapeComms(client){
                         commsPost.push({channel: channel, title: title, replies: replies, author:author, last:last})                        
                     })
                     commsPost.forEach(function(elm){
-                        Comms.findOrCreate({channel: elm.channel, title: elm.title, author: elm.author}, function(err, comm, created){
+                        Comms.findOrCreate({channel: elm.channel, title: escape(elm.title), author: elm.author}, function(err, comm, created){
                             if(err){
                                 console.log("ERROR: " + err)
                             }
                             if(created){
                                 if(comm.title !== undefined){
-                                    telegramNotify("<b>New Comms</b> - " + comm.channel + " \n <b>" + comm.title + "</b> \n [" + comm.author + "]" )
-                                    discordNotify("@here ***New Comms*** - **" + comm.channel + "** \n **Title:** " + comm.title + " \n **Author:** " + comm.author)
+                                    telegramNotify("<b>New Comms</b> - " + comm.channel + " \n <b>" + unescape(elm.title) + "</b> \n [" + comm.author + "]" )
+                                    discordNotify("@here ***New Comms*** - **" + comm.channel + "** \n **Title:** " + unescape(elm.title) + " \n **Author:** " + comm.author)
                                 }
                                 comm.replies = Number(elm.replies);
-                                comm.save((err)=>{
+                                comm.save((err) =>{
                                     if(err){
                                         console.log(err)
                                     }
@@ -84,8 +84,8 @@ function scrapeComms(client){
                                 
                             } else {
                                 if(comm.replies && Number(comm.replies) < Number(elm.replies)){
-                                    telegramNotify("<b>New Reply</b> - " + comm.channel + " \n <b>" + comm.title + "</b> [" + elm.replies + "] \n " + elm.last)
-                                    discordNotify("@here ***New Reply*** - **" + comm.channel + "** \n **Title:** " + comm.title + " **[" + elm.replies + "]** \n " + elm.last)
+                                    telegramNotify("<b>New Reply</b> - " + comm.channel + " \n <b>" + unescape(elm.title) + "</b> [" + elm.replies + "] \n " + elm.last)
+                                    discordNotify("@here ***New Reply*** - **" + comm.channel + "** \n **Title:** " + unescape(elm.title) + " **[" + elm.replies + "]** \n " + elm.last)
                                     comm.replies = Number(elm.replies)
                                     comm.last = elm.last
                                     comm.save((err)=>{
